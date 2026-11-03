@@ -150,15 +150,43 @@ table.ed input:focus{outline:none;border-color:var(--accent);background:var(--su
 #kits td.ok{color:var(--good)}
 @media (prefers-reduced-motion: no-preference){ .big,.bar .bn{transition:color .2s} }
 @media (max-width:380px){ .keys{grid-template-columns:1fr 1fr} .keys .key:last-child{grid-column:1/-1} }
+
+/* cores de cada marketplace (apenas cor, sem marcas) */
+:root{--shopee:#EE4D2D;--ml:#FFE600;--ml-ink:#2D3277;--amz:#FF9900;--amz-ink:#131A22}
+.topo{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px}
+.marca{width:40px;height:40px;border-radius:10px;display:block}
+.tt{display:flex;flex-direction:column;min-width:0}
+.tt h1{font-size:1.35rem;line-height:1.1}
+.selo{font:500 .7rem var(--f-num);color:var(--muted);text-align:right;max-width:9.5rem;line-height:1.3}
+.links{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.mk{display:flex;align-items:center;justify-content:center;gap:6px;min-height:44px;border-radius:10px;font:600 .82rem var(--f-body);text-decoration:none;padding:8px 6px;text-align:center;line-height:1.15}
+.mk .dot{width:8px;height:8px;border-radius:50%;flex:none;background:currentColor;opacity:.9}
+.mk.sh{background:var(--shopee);color:#fff}
+.mk.ml{background:var(--ml);color:var(--ml-ink)}
+.mk.az{background:var(--amz-ink);color:#fff}
+.mk.az .dot{background:var(--amz)}
+.mk:active{transform:scale(.98)}
+.mk:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.seg .ch{display:flex;align-items:center;justify-content:center;gap:6px;line-height:1.15}
+.seg .ch .dot{width:8px;height:8px;border-radius:50%;flex:none}
+.ch.sh .dot{background:var(--shopee)} .ch.ml .dot{background:var(--ml);box-shadow:0 0 0 1px var(--ml-ink) inset} .ch.az .dot{background:var(--amz)} .ch.ou .dot{background:var(--muted)}
+.ch.sh[aria-pressed="true"]{box-shadow:inset 0 -3px 0 var(--shopee),0 1px 2px rgba(0,0,0,.12)}
+.ch.ml[aria-pressed="true"]{box-shadow:inset 0 -3px 0 #E6CF00,0 1px 2px rgba(0,0,0,.12)}
+.ch.az[aria-pressed="true"]{box-shadow:inset 0 -3px 0 var(--amz),0 1px 2px rgba(0,0,0,.12)}
+.ch.ou[aria-pressed="true"]{box-shadow:inset 0 -3px 0 var(--muted),0 1px 2px rgba(0,0,0,.12)}
+.card{box-shadow:0 1px 0 rgba(0,0,0,.03)}
+.hero{background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 7%,var(--surface)),var(--surface))}
+@media (max-width:380px){.seg .ch{font-size:.78rem;padding-inline:2px}.mk{font-size:.76rem}}
 </style>
 </head>
 <body>
 
 
 <div class="wrap">
-  <header>
-    <h1>LDF-calculadora-marketplaces</h1>
-    <span class="sub" id="status">Taxas de 01/10/2026</span>
+  <header class="topo">
+    <img class="marca" src="icon-192.png" alt="" width="40" height="40">
+    <div class="tt"><h1>LDF Calc</h1><span class="sub">Calculadora de marketplaces</span></div>
+    <span class="selo" id="status">Taxas de 01/10/2026</span>
   </header>
   <p class="hint" id="statusNota" style="margin:-8px 0 0"></p>
 
@@ -168,21 +196,21 @@ table.ed input:focus{outline:none;border-color:var(--accent);background:var(--su
   </div>
 
   <section class="card" aria-label="Produto e busca">
-    <div class="field"><label for="nome">Produto</label><div class="inp"><input id="nome" class="txt" type="text" value="Tek Bond 793 20g (exemplo)"></div></div>
+    <div class="field"><label for="nome">Produto para pesquisar</label><div class="inp"><input id="nome" class="txt" type="text" value="Tek Bond 793 20g (exemplo)"></div></div>
     <div class="links">
-      <a class="btn" id="bShopee" href="#" target="_blank" rel="noopener">Ver na Shopee</a>
-      <a class="btn" id="bMl" href="#" target="_blank" rel="noopener">Ver no ML</a>
-      <a class="btn" id="bAmz" href="#" target="_blank" rel="noopener">Ver na Amazon</a>
+      <a class="mk sh" id="bShopee" href="#" target="_blank" rel="noopener"><span class="dot"></span>Shopee</a>
+      <a class="mk ml" id="bMl" href="#" target="_blank" rel="noopener"><span class="dot"></span>Mercado Livre</a>
+      <a class="mk az" id="bAmz" href="#" target="_blank" rel="noopener"><span class="dot"></span>Amazon</a>
     </div>
   </section>
 
   <section class="card" aria-label="Canal">
     <span class="label">Canal</span>
     <div class="seg" id="canal" role="group">
-      <button data-c="shopee" aria-pressed="true">Shopee</button>
-      <button data-c="ml" aria-pressed="false">Mercado Livre</button>
-      <button data-c="amz" aria-pressed="false">Amazon</button>
-      <button data-c="custom" aria-pressed="false">Outro</button>
+      <button data-c="shopee" class="ch sh" aria-pressed="true"><span class="dot"></span>Shopee</button>
+      <button data-c="ml" class="ch ml" aria-pressed="false"><span class="dot"></span>Mercado Livre</button>
+      <button data-c="amz" class="ch az" aria-pressed="false"><span class="dot"></span>Amazon</button>
+      <button data-c="custom" class="ch ou" aria-pressed="false"><span class="dot"></span>Outro</button>
     </div>
     <div id="cfg-shopee" class="hint"></div>
     <div id="cfg-ml" class="grid" hidden>
@@ -452,10 +480,15 @@ function calc(c,P,b,k){
   const lucro=P-t.com-t.fixo-imp-ads-op-afil-dev-b.emb-produto;
   return{t,custoUn,produto,imp,ads,op,afil,dev,lucro,margem:P>0?lucro/P:0};
 }
-function menorPreco(c,b,k,m){ // menor preço com lucro >= m*P (varre centavo a centavo; faixas não são lineares)
+function menorPreco(c,b,k,m){ // menor preço com lucro >= m*P; dentro de cada faixa a conta é crescente, os saltos ficam nos limites
   const ini=Math.max(1,Math.floor(((b.lote/b.loteqtd)*b.kit+b.emb)*100));
-  for(let i=ini;i<=500000;i++){const P=i/100;const r=calc(c,P,b,k);if(r.lucro>=m*P-1e-9)return P}
-  return null;
+  const ok=i=>{const P=i/100;return calc(c,P,b,k).lucro>=m*P-1e-9};
+  let achou=null;
+  for(let i=ini;i<=500000;i+=50){if(ok(i)){achou=i;break}}
+  limites(c).forEach(L=>{const i=Math.round(L*100)-1;if(i>=ini&&(achou==null||i<achou)&&ok(i))achou=i});
+  if(achou==null)return null;
+  while(achou-1>=ini&&ok(achou-1))achou--;
+  return achou/100;
 }
 function classe(m,alvo){return m>=alvo-1e-9?"good":m>=0?"warn":"bad"}
 function rotulo(m,alvo){return m>=alvo-1e-9?"Viável":m>=0?"Apertado":"Prejuízo"}
@@ -473,10 +506,16 @@ function zonaMorta(c,P,b,k){
   limites(c).forEach(L=>{if(L>P||L-0.01<=0)return;const p=Math.round((L-0.01)*100)/100;const x=calc(c,p,b,k);
     if(x.lucro>r.lucro+0.005&&(!best||x.lucro>best.lucro))best={p,L,lucro:x.lucro}});
   if(!best)return null;
-  let ate=null;for(let i=Math.round(best.L*100);i<=Math.round(best.L*100)+50000;i++){const q=i/100;if(calc(c,q,b,k).lucro>=best.lucro-1e-9){ate=q;break}}
+  let ate=null;const okz=i=>calc(c,i/100,b,k).lucro>=best.lucro-1e-9;let j=null;for(let i=Math.round(best.L*100);i<=Math.round(best.L*100)+100000;i+=50){if(okz(i)){j=i;break}}if(j!=null){while(j-1>=Math.round(best.L*100)&&okz(j-1))j--;ate=j/100}
   return{...best,ate,lucroAtual:r.lucro};
 }
 
+function atualizarBusca(){
+  const termo=($("nome").value||"").replace(/\(exemplo\)/i,"").trim();
+  $("bShopee").href="https://shopee.com.br/search?keyword="+encodeURIComponent(termo);
+  $("bMl").href="https://lista.mercadolivre.com.br/"+encodeURIComponent(termo.replace(/\s+/g,"-"));
+  $("bAmz").href="https://www.amazon.com.br/s?k="+encodeURIComponent(termo);
+}
 function render(){
   const b=base(),k=cfg(),r=calc(canal,b.P,b,k),temCusto=b.lote>0;
   const pagar=modo==="pagar";
@@ -485,11 +524,7 @@ function render(){
   $("loteL").textContent=pagar?"Custo oferecido (opcional)":"Valor pago no lote";
   $("custoUnHint").innerHTML=temCusto?"Custo por unidade: <b>"+brl(r.custoUn)+"</b> · custo do anúncio: <b>"+brl(r.produto)+"</b>":"Sem custo informado: a calculadora mostra quanto você pode pagar.";
 
-  // busca nos marketplaces
-  const termo=($("nome").value||"").replace(/\(exemplo\)/i,"").trim();
-  $("bShopee").href="https://shopee.com.br/search?keyword="+encodeURIComponent(termo);
-  $("bMl").href="https://lista.mercadolivre.com.br/"+encodeURIComponent(termo.replace(/\s+/g,"-"));
-  $("bAmz").href="https://www.amazon.com.br/s?k="+encodeURIComponent(termo);
+  atualizarBusca();
 
   // quanto posso pagar
   const cmax=custoMax(canal,b.P,b,k,b.alvo), ceq=custoMax(canal,b.P,b,k,0);
@@ -624,7 +659,10 @@ function setTipo(t,r=true){const prev=mltipo;mltipo=t;document.querySelectorAll(
 document.querySelectorAll("#canal button").forEach(b=>b.addEventListener("click",()=>setCanal(b.dataset.c)));
 document.querySelectorAll("#mltipo button").forEach(b=>b.addEventListener("click",()=>setTipo(b.dataset.t)));
 document.querySelectorAll("#modo button").forEach(b=>b.addEventListener("click",()=>{modo=b.dataset.m;render()}));
-document.querySelectorAll("input,select").forEach(el=>{if(!el.closest("#tabelas"))el.addEventListener("input",render)});
+let tR;const agendar=()=>{clearTimeout(tR);tR=setTimeout(render,90)};
+document.querySelectorAll("input,select").forEach(el=>{if(el.closest("#tabelas"))return;
+  if(el.id==="nome")el.addEventListener("input",()=>{atualizarBusca();clearTimeout(tR);tR=setTimeout(render,400)});
+  else el.addEventListener("input",agendar)});
 
 let tt;function toast(m){const t=$("toast");t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,1800)}
 $("copiar").addEventListener("click",()=>{const txt=$("texto").value;
