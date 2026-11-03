@@ -174,6 +174,23 @@ table.ed input:focus{outline:none;border-color:var(--accent);background:var(--su
 .ch.ml[aria-pressed="true"]{box-shadow:inset 0 -3px 0 #E6CF00,0 1px 2px rgba(0,0,0,.12)}
 .ch.az[aria-pressed="true"]{box-shadow:inset 0 -3px 0 var(--amz),0 1px 2px rgba(0,0,0,.12)}
 .ch.ou[aria-pressed="true"]{box-shadow:inset 0 -3px 0 var(--muted),0 1px 2px rgba(0,0,0,.12)}
+
+/* pesquisa no Mercado Livre */
+.pq-top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.pq-top .label{flex:1}
+.pq-res{display:flex;flex-direction:column;gap:6px}
+.pq-sum{font:500 .78rem var(--f-num);color:var(--muted)}
+.pq-it{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer;text-align:left;width:100%;color:inherit;font:inherit}
+.pq-it:active{transform:scale(.995)} .pq-it:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.pq-it .n{font:600 .85rem var(--f-num);color:var(--muted);width:1.6rem;text-align:center}
+.pq-it .t{font-size:.82rem;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.pq-it .m{font:500 .72rem var(--f-num);color:var(--muted);margin-top:3px;display:flex;flex-wrap:wrap;gap:4px 8px}
+.pq-it .m b{color:var(--ink);font-weight:600}
+.pq-it .p{font:600 .95rem var(--f-num);text-align:right;white-space:nowrap}
+.pq-it .p small{display:block;font:500 .68rem var(--f-num);color:var(--good)}
+.pq-it .tag{display:inline-block;padding:1px 6px;border-radius:999px;background:var(--sunk);font-weight:600}
+.pq-it .tag.full{background:var(--good-bg);color:var(--good)}
+.pq-ln{font:500 .72rem var(--f-body);color:var(--accent);text-decoration:none}
 .card{box-shadow:0 1px 0 rgba(0,0,0,.03)}
 .hero{background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 7%,var(--surface)),var(--surface))}
 @media (max-width:380px){.seg .ch{font-size:.78rem;padding-inline:2px}.mk{font-size:.76rem}}
@@ -218,6 +235,19 @@ details.custos[open] summary::after{content:"Fechar"}
       <a class="mk az" id="bAmz" href="#" target="_blank" rel="noopener"><svg class="lupa" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12.6 12.6l4.4 4.4" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>Amazon</a>
     </div>
     <p class="agora" id="mlCat" hidden></p>
+  </section>
+
+  <section class="card" id="pesq" aria-label="Pesquisa no Mercado Livre">
+    <div class="pq-top">
+      <span class="label">Pesquisa · Mercado Livre</span>
+      <button class="btn primary" id="pqBuscar" type="button">Buscar os 20 mais vendidos</button>
+    </div>
+    <p class="hint" id="pqNota">Vendidos, data do anúncio e média de vendas por mês de cada concorrente. Toque num anúncio para usar o preço dele no cálculo.</p>
+    <div id="pqLogin" hidden>
+      <p class="hint">A pesquisa usa a conta da LDF no Mercado Livre. É um login único; depois fica conectado para todos.</p>
+      <a class="btn primary" id="pqLoginBt" href="#">Conectar a conta LDF no Mercado Livre</a>
+    </div>
+    <div id="pqRes" hidden></div>
   </section>
 
   <section class="card" aria-label="Canal">
@@ -534,6 +564,18 @@ function mostrarCat(){
     :"Categoria no Mercado Livre: <b>"+mlCat.nome+"</b> · tarifa ainda não cadastrada. Confira no ML e digite em Comissão da categoria.";
   $("mlcomL").textContent=t?"Comissão ("+mlCat.nome+")":"Comissão da categoria";
 }
+// servidor da LDF (Cloudflare Worker): tarifa ao vivo e pesquisa de anúncios com a conta LDF
+const SERVIDOR="https://ldf-calc-ml.ldfnegociosempresariais.workers.dev";
+const tarifaViva={};
+async function tarifaAoVivo(cat){
+  if(tarifaViva[cat])return tarifaViva[cat];
+  try{
+    const r=await fetch(SERVIDOR+"/tarifa?cat="+encodeURIComponent(cat)+"&preco="+encodeURIComponent(num($("preco").value)||50));
+    const j=await r.json();
+    if(j&&j.classico!=null&&j.premium!=null){tarifaViva[cat]={classico:j.classico,premium:j.premium};return tarifaViva[cat]}
+  }catch(e){}
+  return null;
+}
 async function detectarCategoria(){
   const termo=($("nome").value||"").replace(/\(exemplo\)/i,"").trim();
   if(termo.length<3){mlCat=null;mostrarCat();render();return}
@@ -541,10 +583,59 @@ async function detectarCategoria(){
     const r=await fetch("https://api.mercadolibre.com/sites/MLB/domain_discovery/search?limit=1&q="+encodeURIComponent(termo));
     const j=await r.json();const c=Array.isArray(j)&&j[0];
     mlCat=c?{id:c.category_id,nome:c.category_name}:null;
+    if(mlCat){
+      // tarifa real da categoria, direto do Mercado Livre; a tabela do taxas.json é o reserva
+      const t=await tarifaAoVivo(mlCat.id);
+      if(t){TX.ml.categorias=TX.ml.categorias||{};TX.ml.categorias[mlCat.id]=t}
+    }
     aplicarTarifaCat();
   }catch(e){}
   mostrarCat();render();
 }
+
+// ---- Pesquisa: 20 mais vendidos no Mercado Livre ----
+const mesAno=iso=>{if(!iso)return"—";const d=new Date(iso);return String(d.getMonth()+1).padStart(2,"0")+"/"+d.getFullYear()};
+const nInt=n=>n==null?"—":n.toLocaleString("pt-BR");
+$("pqLoginBt").href=SERVIDOR+"/login";
+async function pesquisar(){
+  const termo=($("nome").value||"").replace(/\(exemplo\)/i,"").trim();
+  if(termo.length<3){toast("Digite o produto primeiro");return}
+  const bt=$("pqBuscar"),res=$("pqRes");bt.disabled=true;bt.textContent="Buscando…";
+  $("pqLogin").hidden=true;res.hidden=false;res.innerHTML='<p class="hint">Consultando o Mercado Livre…</p>';
+  try{
+    const r=await fetch(SERVIDOR+"/buscar?q="+encodeURIComponent(termo));
+    const j=await r.json();
+    if(j.erro==="login"){res.hidden=true;$("pqLogin").hidden=false;return}
+    if(j.erro){res.innerHTML='<p class="hint">Não deu: '+j.erro+(j.status?" ("+j.status+")":"")+'</p>';return}
+    const a=j.anuncios||[];
+    if(!a.length){res.innerHTML='<p class="hint">Nenhum anúncio encontrado.</p>';return}
+    const semV=j.semVendidos||0;
+    res.innerHTML='<div class="pq-res"><p class="pq-sum">'+nInt(j.total)+' anúncios no ML · analisados '+j.analisados+' · ordem: mais vendidos'+(semV?' · '+semV+' sem "vendidos" informado':'')+'</p>'
+      +a.map((x,i)=>'<button type="button" class="pq-it" data-p="'+x.preco+'" data-l="'+(x.link||"")+'">'
+        +'<span class="n">'+(i+1)+'</span>'
+        +'<span><span class="t">'+x.titulo.replace(/</g,"&lt;")+'</span>'
+        +'<span class="m"><span>Vendidos <b>'+nInt(x.vendidos)+'</b></span><span>Desde <b>'+mesAno(x.criadoEm)+'</b></span><span>≈ <b>'+nInt(x.vendasMes)+'</b>/mês</span>'
+        +(x.full?'<span class="tag full">Full</span>':'')+(x.catalogo?'<span class="tag">Catálogo</span>':'')+(x.tipo?'<span class="tag">'+x.tipo+'</span>':'')
+        +(x.vendedor?'<span>'+String(x.vendedor).replace(/</g,"&lt;")+'</span>':'')+'</span></span>'
+        +'<span class="p">'+brl(x.preco)+(x.freteGratis?'<small>frete grátis</small>':'')+'</span></button>').join("")
+      +'<p class="hint">Vendas/mês = vendidos ÷ meses no ar (média desde o lançamento). Toque para usar o preço; segure para abrir o anúncio.</p></div>';
+  }catch(e){res.innerHTML='<p class="hint">Sem conexão com o servidor da LDF.</p>'}
+  finally{bt.disabled=false;bt.textContent="Buscar os 20 mais vendidos"}
+}
+$("pqBuscar").addEventListener("click",pesquisar);
+$("pqRes").addEventListener("click",e=>{const it=e.target.closest(".pq-it");if(!it)return;
+  $("preco").value=String(+it.dataset.p).toFixed(2).replace(".",",");render();toast("Preço do líder: "+brl(+it.dataset.p));window.scrollTo({top:$("heroPagar").offsetTop-80,behavior:"smooth"})});
+$("pqRes").addEventListener("contextmenu",e=>{const it=e.target.closest(".pq-it");if(!it||!it.dataset.l)return;e.preventDefault();window.open(it.dataset.l,"_blank","noopener")});
+// volta do login do Mercado Livre: o code vem na URL do app e vai para o servidor virar token
+(async()=>{
+  const u=new URL(location.href),code=u.searchParams.get("code");
+  if(!code)return;
+  history.replaceState(null,"",u.pathname);
+  try{
+    const r=await fetch(SERVIDOR+"/callback?code="+encodeURIComponent(code));const j=await r.json();
+    if(j.ok){toast("Conta LDF conectada ao Mercado Livre");pesquisar()}else toast("Não conectou: "+(j.erro||"erro"));
+  }catch(e){toast("Não conectou: sem resposta do servidor")}
+})();
 function atualizarBusca(){
   const termo=($("nome").value||"").replace(/\(exemplo\)/i,"").trim();
   $("bShopee").href="https://shopee.com.br/search?keyword="+encodeURIComponent(termo);
