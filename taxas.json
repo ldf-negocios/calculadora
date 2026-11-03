@@ -1,7 +1,7 @@
 {
  "data": "01/10/2026",
  "verificadoEm": "02/11/2026",
- "nota": "Tabela inicial conferida nas páginas oficiais em 01/10/2026",
+ "nota": "Tarifas do ML por categoria conferidas no painel do vendedor em 02/11/2026",
  "shopee": {
   "faixas": [
    {
@@ -94,7 +94,54 @@
     10.25,
     19.75
    ]
-  ]
+  ],
+  "categorias": {
+   "MLB436132": {
+    "nome": "Sabão para Roupas",
+    "classico": 14,
+    "premium": 19
+   },
+   "MLB191461": {
+    "nome": "Tira Manchas para Roupas",
+    "classico": 14,
+    "premium": 19
+   },
+   "MLB277422": {
+    "nome": "Desodorizadores de Sanitários",
+    "classico": 13,
+    "premium": 18
+   },
+   "MLB271161": {
+    "nome": "Luvas para Limpeza",
+    "classico": 13,
+    "premium": 18
+   },
+   "MLB105458": {
+    "nome": "Colas",
+    "classico": 11.5,
+    "premium": 16.5
+   },
+   "MLB178930": {
+    "nome": "Tapete Higiênico",
+    "classico": 12.5,
+    "premium": 17.5
+   },
+   "MLB264062": {
+    "nome": "Sacos de Lixo",
+    "classico": 13,
+    "premium": 18
+   },
+   "MLB270415": {
+    "nome": "Rolos de Embalagem",
+    "classico": 11.5,
+    "premium": 16.5
+   },
+   "MLB263727": {
+    "nome": "Panos",
+    "classico": 14,
+    "premium": 19
+   }
+  }
  },
  "amz": {
   "faixas": [

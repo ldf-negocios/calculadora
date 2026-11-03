@@ -217,6 +217,7 @@ details.custos[open] summary::after{content:"Fechar"}
       <a class="mk ml" id="bMl" href="#" target="_blank" rel="noopener"><svg class="lupa" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12.6 12.6l4.4 4.4" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>Mercado Livre</a>
       <a class="mk az" id="bAmz" href="#" target="_blank" rel="noopener"><svg class="lupa" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12.6 12.6l4.4 4.4" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>Amazon</a>
     </div>
+    <p class="agora" id="mlCat" hidden></p>
   </section>
 
   <section class="card" aria-label="Canal">
@@ -236,7 +237,7 @@ details.custos[open] summary::after{content:"Fechar"}
           <button data-t="premium" aria-pressed="false">Premium</button>
         </div>
       </div>
-      <div class="field"><label for="mlcom">Comissão da categoria</label><div class="inp"><input id="mlcom" inputmode="decimal" value="14"><span>%</span></div></div>
+      <div class="field"><label for="mlcom" id="mlcomL">Comissão da categoria</label><div class="inp"><input id="mlcom" inputmode="decimal" value="14"><span>%</span></div></div>
       <div class="field"><label for="mlpeso">Peso do pacote</label><div class="inp"><select id="mlpeso">
         <option value="0">até 0,3 kg</option><option value="1">0,3–0,5 kg</option><option value="2">0,5–1 kg</option><option value="3">1–1,5 kg</option>
         <option value="4">1,5–2 kg</option><option value="5">2–3 kg</option><option value="6">3–4 kg</option><option value="7">4–5 kg</option></select></div></div>
@@ -405,6 +406,7 @@ function salvarTX(){try{localStorage.setItem("cb-taxas",JSON.stringify(TX))}catc
     META={verificadoEm:d.verificadoEm||"",nota:d.nota||""};
     TX={data:d.data||"",shopee:d.shopee,ml:d.ml,amz:d.amz};salvarTX();
     try{localStorage.setItem("cb-meta",JSON.stringify(META))}catch(e){}
+    TX.ml.categorias=d.ml.categorias||{};if(mlCat){mostrarCat()}
     montarEditores();textosTaxas();render();
   }catch(e){}
 })();
@@ -521,6 +523,28 @@ function zonaMorta(c,P,b,k){
   return{...best,ate,lucroAtual:r.lucro};
 }
 
+let mlCat=null,tCat;
+function tarifaCat(){return mlCat&&TX.ml&&TX.ml.categorias&&TX.ml.categorias[mlCat.id]}
+function aplicarTarifaCat(){const t=tarifaCat();if(t)$("mlcom").value=String(mltipo==="premium"?t.premium:t.classico).replace(".",",")}
+function mostrarCat(){
+  const el=$("mlCat"),t=tarifaCat();
+  if(!mlCat){el.hidden=true;$("mlcomL").textContent="Comissão da categoria";return}
+  el.hidden=false;
+  el.innerHTML=t?"Categoria no Mercado Livre: <b>"+mlCat.nome+"</b> · Clássico "+fmtP(t.classico)+" · Premium "+fmtP(t.premium)
+    :"Categoria no Mercado Livre: <b>"+mlCat.nome+"</b> · tarifa ainda não cadastrada. Confira no ML e digite em Comissão da categoria.";
+  $("mlcomL").textContent=t?"Comissão ("+mlCat.nome+")":"Comissão da categoria";
+}
+async function detectarCategoria(){
+  const termo=($("nome").value||"").replace(/\(exemplo\)/i,"").trim();
+  if(termo.length<3){mlCat=null;mostrarCat();render();return}
+  try{
+    const r=await fetch("https://api.mercadolibre.com/sites/MLB/domain_discovery/search?limit=1&q="+encodeURIComponent(termo));
+    const j=await r.json();const c=Array.isArray(j)&&j[0];
+    mlCat=c?{id:c.category_id,nome:c.category_name}:null;
+    aplicarTarifaCat();
+  }catch(e){}
+  mostrarCat();render();
+}
 function atualizarBusca(){
   const termo=($("nome").value||"").replace(/\(exemplo\)/i,"").trim();
   $("bShopee").href="https://shopee.com.br/search?keyword="+encodeURIComponent(termo);
@@ -651,8 +675,8 @@ function render(){
 
 // estado e histórico (só neste aparelho)
 const CAMPOS=["nome","lote","loteqtd","kit","preco","imposto","emb","ads","op","alvo","afil","dev","part","mlcom","mlpeso","mlfrete100","amzcom","amzfrete79","cuspct","cusfix"];
-function salvarEstado(){try{const s={canal,mltipo,modo};CAMPOS.forEach(f=>s[f]=$(f).value);localStorage.setItem("cb-estado",JSON.stringify(s))}catch(e){}}
-function aplicar(s){if(!s)return;if(s.modo)modo=s.modo;CAMPOS.forEach(f=>{if(s[f]!=null)$(f).value=s[f]});if(s.mltipo)setTipo(s.mltipo,false);if(s.canal)setCanal(s.canal,false)}
+function salvarEstado(){try{const s={canal,mltipo,modo,mlCat};CAMPOS.forEach(f=>s[f]=$(f).value);localStorage.setItem("cb-estado",JSON.stringify(s))}catch(e){}}
+function aplicar(s){if(!s)return;if(s.modo)modo=s.modo;mlCat=s.mlCat||null;CAMPOS.forEach(f=>{if(s[f]!=null)$(f).value=s[f]});if(s.mltipo)setTipo(s.mltipo,false);if(s.canal)setCanal(s.canal,false)}
 function lerHist(){try{return JSON.parse(localStorage.getItem("cb-hist")||"[]")}catch(e){return[]}}
 function renderHist(){
   const h=lerHist();
@@ -661,7 +685,7 @@ function renderHist(){
 }
 $("hist").addEventListener("click",e=>{const bt=e.target.closest("button[data-i]");if(!bt)return;const x=lerHist()[+bt.dataset.i];if(x){aplicar(x.estado);render();toast("Simulação carregada");window.scrollTo({top:0,behavior:"smooth"})}});
 $("salvar").addEventListener("click",()=>{
-  const b=base(),r=calc(canal,b.P,b,cfg());const estado={canal,mltipo,modo};CAMPOS.forEach(f=>estado[f]=$(f).value);
+  const b=base(),r=calc(canal,b.P,b,cfg());const estado={canal,mltipo,modo,mlCat};CAMPOS.forEach(f=>estado[f]=$(f).value);
   const h=lerHist();const cm=custoMax(canal,b.P,b,cfg(),b.alvo);h.unshift({estado,resumo:b.lote>0?brl(b.P)+" → "+pct(r.margem):"pagar até "+brl(cm)+"/un"});
   try{localStorage.setItem("cb-hist",JSON.stringify(h.slice(0,20)));toast("Salvo neste celular")}catch(e){toast("Não foi possível salvar aqui")}
   renderHist();
@@ -670,13 +694,13 @@ $("salvar").addEventListener("click",()=>{
 function setCanal(c,r=true){canal=c;document.querySelectorAll("#canal button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.c===c));
   ["shopee","ml","amz","custom"].forEach(x=>$("cfg-"+x).hidden=x!==c);if(r)render()}
 function setTipo(t,r=true){const prev=mltipo;mltipo=t;document.querySelectorAll("#mltipo button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.t===t));
-  if(r&&prev!==t){const v=num($("mlcom").value);$("mlcom").value=String(t==="premium"?v+5:Math.max(v-5,0)).replace(".",",");render()}}
+  if(r&&prev!==t){if(tarifaCat())aplicarTarifaCat();else{const v=num($("mlcom").value);$("mlcom").value=String(t==="premium"?v+5:Math.max(v-5,0)).replace(".",",")}render()}}
 document.querySelectorAll("#canal button").forEach(b=>b.addEventListener("click",()=>setCanal(b.dataset.c)));
 document.querySelectorAll("#mltipo button").forEach(b=>b.addEventListener("click",()=>setTipo(b.dataset.t)));
 document.querySelectorAll("#modo button").forEach(b=>b.addEventListener("click",()=>{modo=b.dataset.m;render()}));
 let tR;const agendar=()=>{clearTimeout(tR);tR=setTimeout(render,90)};
 document.querySelectorAll("input,select").forEach(el=>{if(el.closest("#tabelas"))return;
-  if(el.id==="nome")el.addEventListener("input",()=>{atualizarBusca();clearTimeout(tR);tR=setTimeout(render,400)});
+  if(el.id==="nome")el.addEventListener("input",()=>{atualizarBusca();clearTimeout(tCat);tCat=setTimeout(detectarCategoria,700)});
   else el.addEventListener("input",agendar)});
 
 let tt;function toast(m){const t=$("toast");t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,1800)}
@@ -686,6 +710,7 @@ $("copiar").addEventListener("click",()=>{const txt=$("texto").value;
 
 try{aplicar(JSON.parse(localStorage.getItem("cb-estado")))}catch(e){}
 montarEditores();textosTaxas();renderHist();render();
+if(mlCat)mostrarCat();else detectarCategoria();
 })();
 </script>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").catch(()=>{})}</script>
