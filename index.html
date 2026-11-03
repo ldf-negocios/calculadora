@@ -177,6 +177,21 @@ table.ed input:focus{outline:none;border-color:var(--accent);background:var(--su
 .card{box-shadow:0 1px 0 rgba(0,0,0,.03)}
 .hero{background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 7%,var(--surface)),var(--surface))}
 @media (max-width:380px){.seg .ch{font-size:.78rem;padding-inline:2px}.mk{font-size:.76rem}}
+
+.mk .lupa{width:15px;height:15px;flex:none}
+.seg .ch[aria-pressed="true"]{font-weight:700;color:var(--ink)}
+.ch.sh[aria-pressed="true"]{outline:2px solid var(--shopee);outline-offset:-2px}
+.ch.ml[aria-pressed="true"]{outline:2px solid #E6CF00;outline-offset:-2px}
+.ch.az[aria-pressed="true"]{outline:2px solid var(--amz);outline-offset:-2px}
+.ch.ou[aria-pressed="true"]{outline:2px solid var(--muted);outline-offset:-2px}
+.agora{margin:0;font-size:.84rem;color:var(--muted)}
+.agora b{font-family:var(--f-num);font-weight:500;color:var(--ink)}
+details.custos summary{display:flex;align-items:center;gap:10px;cursor:pointer;list-style:none}
+details.custos summary::-webkit-details-marker{display:none}
+details.custos summary::after{content:"Ajustar";margin-left:auto;font:600 .8rem var(--f-body);color:var(--accent);flex:none}
+details.custos[open] summary::after{content:"Fechar"}
+.cx{display:flex;flex-direction:column;gap:3px;min-width:0}
+.resumo{font:500 .78rem var(--f-num);color:var(--muted);line-height:1.4}
 </style>
 </head>
 <body>
@@ -198,9 +213,9 @@ table.ed input:focus{outline:none;border-color:var(--accent);background:var(--su
   <section class="card" aria-label="Produto e busca">
     <div class="field"><label for="nome">Produto para pesquisar</label><div class="inp"><input id="nome" class="txt" type="text" value="Tek Bond 793 20g (exemplo)"></div></div>
     <div class="links">
-      <a class="mk sh" id="bShopee" href="#" target="_blank" rel="noopener"><span class="dot"></span>Shopee</a>
-      <a class="mk ml" id="bMl" href="#" target="_blank" rel="noopener"><span class="dot"></span>Mercado Livre</a>
-      <a class="mk az" id="bAmz" href="#" target="_blank" rel="noopener"><span class="dot"></span>Amazon</a>
+      <a class="mk sh" id="bShopee" href="#" target="_blank" rel="noopener"><svg class="lupa" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12.6 12.6l4.4 4.4" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>Shopee</a>
+      <a class="mk ml" id="bMl" href="#" target="_blank" rel="noopener"><svg class="lupa" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12.6 12.6l4.4 4.4" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>Mercado Livre</a>
+      <a class="mk az" id="bAmz" href="#" target="_blank" rel="noopener"><svg class="lupa" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12.6 12.6l4.4 4.4" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>Amazon</a>
     </div>
   </section>
 
@@ -212,7 +227,8 @@ table.ed input:focus{outline:none;border-color:var(--accent);background:var(--su
       <button data-c="amz" class="ch az" aria-pressed="false"><span class="dot"></span>Amazon</button>
       <button data-c="custom" class="ch ou" aria-pressed="false"><span class="dot"></span>Outro</button>
     </div>
-    <div id="cfg-shopee" class="hint"></div>
+    <p class="agora" id="taxaAgora"></p>
+    <div id="cfg-shopee" hidden></div>
     <div id="cfg-ml" class="grid" hidden>
       <div class="field full">
         <div class="seg two" id="mltipo" role="group">
@@ -224,13 +240,13 @@ table.ed input:focus{outline:none;border-color:var(--accent);background:var(--su
       <div class="field"><label for="mlpeso">Peso do pacote</label><div class="inp"><select id="mlpeso">
         <option value="0">até 0,3 kg</option><option value="1">0,3–0,5 kg</option><option value="2">0,5–1 kg</option><option value="3">1–1,5 kg</option>
         <option value="4">1,5–2 kg</option><option value="5">2–3 kg</option><option value="6">3–4 kg</option><option value="7">4–5 kg</option></select></div></div>
-      <div class="field full"><label for="mlfrete100" id="mlfrete100L">Envio ML acima da última faixa</label><div class="inp"><span>R$</span><input id="mlfrete100" inputmode="decimal" value="20,00"></div>
-        <span class="hint" id="mlHint"></span></div>
+      <div class="field full" id="mlfrete100F"><label for="mlfrete100" id="mlfrete100L">Envio ML acima da última faixa</label><div class="inp"><span>R$</span><input id="mlfrete100" inputmode="decimal" value="20,00"></div>
+        </div>
     </div>
     <div id="cfg-amz" class="grid" hidden>
       <div class="field"><label for="amzcom">Comissão</label><div class="inp"><input id="amzcom" inputmode="decimal" value="12"><span>%</span></div></div>
-      <div class="field"><label for="amzfrete79">Envio DBA acima de R$ 79</label><div class="inp"><span>R$</span><input id="amzfrete79" inputmode="decimal" value="12,00"></div></div>
-      <span class="hint full" id="amzHint"></span>
+      <div class="field" id="amzfrete79F"><label for="amzfrete79">Envio DBA acima de R$ 79</label><div class="inp"><span>R$</span><input id="amzfrete79" inputmode="decimal" value="12,00"></div></div>
+      
     </div>
     <div id="cfg-custom" class="grid" hidden>
       <div class="field"><label for="cuspct">Comissão</label><div class="inp"><input id="cuspct" inputmode="decimal" value="16"><span>%</span></div></div>
@@ -245,13 +261,14 @@ table.ed input:focus{outline:none;border-color:var(--accent);background:var(--su
       <div class="field"><label for="preco" id="precoL">Preço do líder</label><div class="inp"><span>R$</span><input id="preco" inputmode="decimal" value="22,90"></div></div>
       <div class="field"><label for="kit">Unidades no anúncio</label><div class="inp"><input id="kit" inputmode="numeric" value="3"><span>un</span></div></div>
       <div class="field"><label for="lote" id="loteL">Custo oferecido (opcional)</label><div class="inp"><span>R$</span><input id="lote" inputmode="decimal" value="12,00"></div></div>
-      <div class="field"><label for="loteqtd">por quantas unidades</label><div class="inp"><input id="loteqtd" inputmode="numeric" value="3"><span>un</span></div></div>
+      <div class="field"><label for="loteqtd">Esse custo é por</label><div class="inp"><input id="loteqtd" inputmode="numeric" value="3"><span>un</span></div></div>
       <span class="hint full" id="custoUnHint"></span>
     </div>
   </section>
 
-  <section class="card" aria-label="Custos e impostos">
-    <span class="label">Custos da operação</span>
+  <details class="card custos" id="custos" aria-label="Custos e impostos">
+    <summary><span class="cx"><span class="label">Custos da operação</span><span class="resumo" id="custosResumo"></span></span></summary>
+    <p class="hint">Ajuste uma vez com os valores da LDF. Fica salvo neste celular.</p>
     <div class="grid">
       <div class="field"><label for="imposto">Imposto</label><div class="inp"><input id="imposto" inputmode="decimal" value="4"><span>%</span></div></div>
       <div class="field"><label for="emb">Embalagem</label><div class="inp"><span>R$</span><input id="emb" inputmode="decimal" value="1,00"></div></div>
@@ -263,7 +280,7 @@ table.ed input:focus{outline:none;border-color:var(--accent);background:var(--su
       <div class="field"><label for="part">Lucro que fica com a LDF</label><div class="inp"><input id="part" inputmode="decimal" value="100"><span>%</span></div></div>
       <span class="hint full">Lucro da LDF: use 50 quando o lucro for dividido com o parceiro (ex.: HODE).</span>
     </div>
-  </section>
+  </details>
 
   <section class="card hero" id="heroPagar" aria-label="Quanto posso pagar">
     <span class="label" id="hpLabel">Pode pagar até</span>
@@ -416,18 +433,12 @@ function montarEditores(){
   $("tx-amz-min").value=fmtN(TX.amz.minCom);
 }
 function textosTaxas(){
-  const fs=TX.shopee.faixas;
-  $("cfg-shopee").textContent="Comissão por faixa: "+fs.map((f,i)=>(f.ate==null?"acima de "+brl(fs[i-1].ate):"até "+brl(f.ate-0.01))+" = "+fmtP(f.pct)+" + "+brl(f.fixo)).join(" · ")+
-    ". Abaixo de "+brl(TX.shopee.minPreco)+": taxa fixa = "+fmtP(TX.shopee.minFracao*100)+" do preço. Ajuste em Tabelas de taxas.";
-  const L=TX.ml.limites;
-  $("mlHint").textContent="Até "+brl(L[L.length-1])+" o envio sai da tabela por peso e faixa de preço (ajustável em Tabelas de taxas).";
-  $("mlfrete100L").textContent="Envio ML acima de "+brl(L[L.length-1]);
-  const A=TX.amz.faixas;
-  $("amzHint").textContent="Envio DBA: "+A.map((f,i)=>(i===0?"abaixo de ":"até ")+brl(f.ate)+" = "+brl(f.fixo)).join(" · ")+". Comissão mínima "+brl(TX.amz.minCom)+".";
+  const L=TX.ml.limites,A=TX.amz.faixas;
+  $("mlfrete100L").textContent="Envio ML para venda acima de "+brl(L[L.length-1]);
   $("amzfrete79").closest(".field").querySelector("label").textContent="Envio DBA a partir de "+brl(A[A.length-1].ate);
   $("confData").textContent="taxas de "+(TX.data||"—");
   $("status").textContent="Taxas de "+(TX.data||"—")+(META.verificadoEm?" · verificadas "+META.verificadoEm:"");
-  $("statusNota").textContent=META.nota||"";
+  const nt=META.nota||"";$("statusNota").textContent=/^Tabela inicial/i.test(nt)?"":nt;$("statusNota").hidden=!$("statusNota").textContent;
 }
 $("tabelas").addEventListener("input",e=>{
   const el=e.target;
@@ -521,10 +532,14 @@ function render(){
   const pagar=modo==="pagar";
   document.querySelectorAll("#modo button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.m===modo));
   $("precoL").textContent=pagar?"Preço do líder":"Preço de venda";
-  $("loteL").textContent=pagar?"Custo oferecido (opcional)":"Valor pago no lote";
+  $("loteL").textContent=pagar?"Custo do fornecedor (opcional)":"Custo do fornecedor";
   $("custoUnHint").innerHTML=temCusto?"Custo por unidade: <b>"+brl(r.custoUn)+"</b> · custo do anúncio: <b>"+brl(r.produto)+"</b>":"Sem custo informado: a calculadora mostra quanto você pode pagar.";
 
   atualizarBusca();
+  $("taxaAgora").innerHTML=(canal==="custom"?"Taxa":"Taxa "+(canal==="ml"?"do ":"da ")+NOMES[canal])+" neste preço: <b>"+r.t.nota.replace(/ \+ envio pela tabela/," + envio "+brl(r.t.fixo)).replace(/ \+ envio DBA/," + envio DBA "+brl(r.t.fixo))+"</b> = <b>"+brl(r.t.com+r.t.fixo)+"</b> por venda";
+  $("mlfrete100F").hidden=!(b.P>TX.ml.limites[TX.ml.limites.length-1]);
+  $("amzfrete79F").hidden=!(b.P>=TX.amz.faixas[TX.amz.faixas.length-1].ate);
+  $("custosResumo").textContent="Imposto "+fmtP(b.imp*100)+" · Emb. "+brl(b.emb)+(b.ads>0?" · ADS "+fmtP(b.ads*100):"")+(b.op>0?" · Operador "+fmtP(b.op*100):"")+(b.afil>0?" · Afil. "+fmtP(b.afil*100):"")+(b.dev>0?" · Devol. "+fmtP(b.dev*100):"")+" · Margem alvo "+fmtP(b.alvo*100)+(b.part<1?" · LDF "+fmtP(b.part*100):"");
 
   // quanto posso pagar
   const cmax=custoMax(canal,b.P,b,k,b.alvo), ceq=custoMax(canal,b.P,b,k,0);
@@ -565,7 +580,7 @@ function render(){
 
   // barra fixa
   if(pagar){$("barCanal").textContent="Pode pagar até · "+NOMES[canal];$("barLucro").textContent=cmax>0?brl(cmax)+"/un":"Não fecha";$("barLucro").style.color=cmax>0?"var(--accent)":"var(--bad)";
-    if(temCusto){$("barPill").hidden=false;$("barPill").className="pill "+cl;$("barPill").textContent="Oferta: "+pct(r.margem)}else $("barPill").hidden=true}
+    if(temCusto){$("barPill").hidden=false;$("barPill").className="pill "+cl;$("barPill").textContent="Oferta dá "+pct(r.margem)}else $("barPill").hidden=true}
   else{$("barPill").hidden=false;$("barCanal").textContent=NOMES[canal]+" · "+brl(b.P);$("barLucro").textContent=brl(r.lucro);$("barLucro").style.color=`var(--${cl})`;
     $("barPill").className="pill "+cl;$("barPill").textContent=lb+" · "+pct(r.margem)}
 
@@ -591,7 +606,7 @@ function render(){
 
   // preços-chave
   const eq=temCusto?menorPreco(canal,b,k,0):null, al=temCusto?menorPreco(canal,b,k,b.alvo):null;
-  $("keysCard").hidden=!temCusto;
+  $("keysCard").hidden=!temCusto||pagar;
   $("kEq").textContent=eq?brl(eq):"—";
   $("kAlvo").textContent=al?brl(al):"—";
   $("kAlvoT").textContent="Preço p/ "+pct(b.alvo)+" de margem";
