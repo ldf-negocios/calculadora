@@ -141,6 +141,25 @@ export default {
         const salvo = env.KV ? await env.KV.get("ml_usuario", "json") : null;
         return json({ kv: !!env.KV, conectado: !!salvo, usuario: salvo && salvo.user_id, desde: salvo && salvo.em }, 200, origem);
       }
+      // mais vendidos de uma categoria (lista oficial do ML) + detalhes dos anúncios
+      if (url.pathname === "/top") {
+        const cat = (url.searchParams.get("cat") || "").replace(/[^A-Z0-9]/g, "");
+        if (!cat) return json({ erro: "cat" }, 400, origem);
+        const tk = await tokenUsuario(env);
+        if (!tk) return json({ erro: "login" }, 200, origem);
+        const h = await ml("/highlights/MLB/category/" + cat, tk);
+        if (h.status !== 200) return json({ erro: "top", status: h.status, detalhe: h.corpo }, 200, origem);
+        const ids = (h.corpo.content || []).filter((x) => x.type === "ITEM").map((x) => x.id).slice(0, 20);
+        const d = ids.length ? await ml("/items?ids=" + ids.join(",") + "&attributes=id,title,price,date_created,start_time,sold_quantity,permalink,listing_type_id,shipping,seller_id,catalog_listing", tk) : { corpo: [] };
+        return json({ categoria: cat, itens: Array.isArray(d.corpo) ? d.corpo.map((x) => x.body || x) : d.corpo, status_itens: d.status }, 200, origem);
+      }
+      if (url.pathname === "/item") {
+        const id = (url.searchParams.get("id") || "").replace(/[^A-Z0-9]/g, "");
+        if (!id) return json({ erro: "id" }, 400, origem);
+        const tk = await tokenUsuario(env);
+        if (!tk) return json({ erro: "login" }, 200, origem);
+        return json(await ml("/items/" + id + "?attributes=id,title,price,date_created,start_time,sold_quantity,permalink,listing_type_id,status", tk), 200, origem);
+      }
       if (url.pathname === "/buscar") {
         const q = (url.searchParams.get("q") || "").trim();
         if (q.length < 3) return json({ erro: "termo curto" }, 400, origem);
