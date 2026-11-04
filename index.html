@@ -209,6 +209,9 @@ details.custos summary::after{content:"Ajustar";margin-left:auto;font:600 .8rem 
 details.custos[open] summary::after{content:"Fechar"}
 .cx{display:flex;flex-direction:column;gap:3px;min-width:0}
 .resumo{font:500 .78rem var(--f-num);color:var(--muted);line-height:1.4}
+
+.pac-tit{margin-top:4px}
+#mlpeso:disabled{opacity:.75}
 </style>
 </head>
 <body>
@@ -271,6 +274,7 @@ details.custos[open] summary::after{content:"Fechar"}
       <div class="field"><label for="mlpeso">Peso do pacote</label><div class="inp"><select id="mlpeso">
         <option value="0">até 0,3 kg</option><option value="1">0,3–0,5 kg</option><option value="2">0,5–1 kg</option><option value="3">1–1,5 kg</option>
         <option value="4">1,5–2 kg</option><option value="5">2–3 kg</option><option value="6">3–4 kg</option><option value="7">4–5 kg</option></select></div></div>
+      <p class="agora full" id="mlPesoInfo" hidden></p>
       <div class="field full" id="mlfrete100F"><label for="mlfrete100" id="mlfrete100L">Envio ML acima da última faixa</label><div class="inp"><span>R$</span><input id="mlfrete100" inputmode="decimal" value="20,00"></div>
         </div>
     </div>
@@ -294,6 +298,12 @@ details.custos[open] summary::after{content:"Fechar"}
       <div class="field"><label for="lote" id="loteL">Custo oferecido (opcional)</label><div class="inp"><span>R$</span><input id="lote" inputmode="decimal" value="12,00"></div></div>
       <div class="field"><label for="loteqtd">Esse custo é por</label><div class="inp"><input id="loteqtd" inputmode="numeric" value="3"><span>un</span></div></div>
       <span class="hint full" id="custoUnHint"></span>
+      <div class="field full pac-tit"><span class="label">Pacote enviado (como sai para o cliente)</span></div>
+      <div class="field"><label for="pkpeso">Peso do pacote</label><div class="inp"><input id="pkpeso" inputmode="decimal" placeholder="opcional"><span>g</span></div></div>
+      <div class="field"><label for="pkc">Comprimento</label><div class="inp"><input id="pkc" inputmode="decimal" placeholder="opcional"><span>cm</span></div></div>
+      <div class="field"><label for="pkl">Largura</label><div class="inp"><input id="pkl" inputmode="decimal" placeholder="opcional"><span>cm</span></div></div>
+      <div class="field"><label for="pka">Altura</label><div class="inp"><input id="pka" inputmode="decimal" placeholder="opcional"><span>cm</span></div></div>
+      <span class="hint full" id="pacHint">Com peso e medidas, a calculadora usa o peso que o Mercado Livre cobra (o maior entre o real e o cúbico) e escolhe a faixa de envio sozinha. Em kit, pese e meça o pacote do kit.</span>
     </div>
   </section>
 
@@ -486,6 +496,26 @@ $("tabelas").addEventListener("input",e=>{
 });
 $("restaurar").addEventListener("click",()=>{location.reload()});
 
+const FX_PESO=[0.3,0.5,1,1.5,2,3,4,5];
+function pacote(){
+  const g=num($("pkpeso").value),c=num($("pkc").value),l=num($("pkl").value),a=num($("pka").value);
+  const real=g>0?g/1000:0,cub=(c>0&&l>0&&a>0)?c*l*a/6000:0;
+  if(!real&&!cub)return null;
+  const cons=Math.max(real,cub);
+  let faixa=FX_PESO.findIndex(x=>cons<=x+1e-9);const acima=faixa<0;if(acima)faixa=FX_PESO.length-1;
+  return{real,cub,cons,faixa,acima,cubico:cub>real};
+}
+function aplicarPacote(){
+  const p=pacote(),el=$("mlPesoInfo"),sel=$("mlpeso");
+  if(!p){el.hidden=true;sel.disabled=false;return null}
+  sel.value=String(p.faixa);sel.disabled=true;
+  const kg=x=>x.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})+" kg";
+  el.hidden=false;
+  el.innerHTML="Peso que o ML cobra: <b>"+kg(p.cons)+"</b> ("+(p.real?"real "+kg(p.real):"real não informado")+(p.cub?" · cúbico "+kg(p.cub):"")+")"
+    +(p.cubico?" · a caixa pesa menos do que ocupa: uma embalagem menor baixa o frete":"")
+    +(p.acima?" · <b>acima de 5 kg</b>: confira o envio no simulador do ML":"");
+  return p;
+}
 function cfg(){return{
   mlcom:num($("mlcom").value)/100, mlpeso:+$("mlpeso").value, mlfrete100:num($("mlfrete100").value),
   amzcom:num($("amzcom").value)/100, amzfrete79:num($("amzfrete79").value),
@@ -643,6 +673,7 @@ function atualizarBusca(){
   $("bAmz").href="https://www.amazon.com.br/s?k="+encodeURIComponent(termo);
 }
 function render(){
+  aplicarPacote();
   const b=base(),k=cfg(),r=calc(canal,b.P,b,k),temCusto=b.lote>0;
   const pagar=modo==="pagar";
   document.querySelectorAll("#modo button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.m===modo));
@@ -757,15 +788,16 @@ function render(){
     `*Lucro: ${brl(r.lucro)} (${pct(r.margem)}) - ${lb}*`,
     ...(b.part<1&&r.lucro>0?[`Parte da LDF (${pct(b.part)}): ${brl(r.lucro*b.part)}`]:[]),
     ...(al?[`Preço p/ ${pct(b.alvo)}: ${brl(al)}`]:[])]:[];
+  const pz=(canal==="ml"&&pacote())?["",`Pacote: peso cobrado pelo ML ${pacote().cons.toLocaleString("pt-BR",{maximumFractionDigits:2})} kg${pacote().cubico?" (peso cúbico)":""}`]:[];
   const zz=z?["",`Atenção: a ${brl(z.p)} o lucro é maior (zona morta de taxa).`]:[];
-  const txt=[...cab,...limite,...det,...zz].join("\n");
+  const txt=[...cab,...limite,...det,...pz,...zz].join("\n");
   $("texto").value=txt;
   $("wa").href="https://wa.me/?text="+encodeURIComponent(txt);
   salvarEstado();
 }
 
 // estado e histórico (só neste aparelho)
-const CAMPOS=["nome","lote","loteqtd","kit","preco","imposto","emb","ads","op","alvo","afil","dev","part","mlcom","mlpeso","mlfrete100","amzcom","amzfrete79","cuspct","cusfix"];
+const CAMPOS=["pkpeso","pkc","pkl","pka","nome","lote","loteqtd","kit","preco","imposto","emb","ads","op","alvo","afil","dev","part","mlcom","mlpeso","mlfrete100","amzcom","amzfrete79","cuspct","cusfix"];
 function salvarEstado(){try{const s={canal,mltipo,modo,mlCat};CAMPOS.forEach(f=>s[f]=$(f).value);localStorage.setItem("cb-estado",JSON.stringify(s))}catch(e){}}
 function aplicar(s){if(!s)return;if(s.modo)modo=s.modo;mlCat=s.mlCat||null;CAMPOS.forEach(f=>{if(s[f]!=null)$(f).value=s[f]});if(s.mltipo)setTipo(s.mltipo,false);if(s.canal)setCanal(s.canal,false)}
 function lerHist(){try{return JSON.parse(localStorage.getItem("cb-hist")||"[]")}catch(e){return[]}}
