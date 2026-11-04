@@ -212,6 +212,11 @@ details.custos[open] summary::after{content:"Fechar"}
 
 .pac-tit{margin-top:4px}
 #mlpeso:disabled{opacity:.75}
+
+.chk{display:flex;gap:8px;align-items:flex-start;font-size:.85rem;line-height:1.35;cursor:pointer}
+.chk input{margin-top:2px;width:18px;height:18px;accent-color:var(--accent);flex:none}
+#fsBox{display:flex;flex-direction:column;gap:10px}
+#fsBox[hidden]{display:none}
 </style>
 </head>
 <body>
@@ -269,6 +274,17 @@ details.custos[open] summary::after{content:"Fechar"}
           <button data-t="classico" aria-pressed="true">Clássico</button>
           <button data-t="premium" aria-pressed="false">Premium</button>
         </div>
+      </div>
+      <div class="field full">
+        <div class="seg two" id="mlenv" role="group" aria-label="Tipo de envio no Mercado Livre">
+          <button data-e="normal" aria-pressed="true">Mercado Envios</button>
+          <button data-e="full" aria-pressed="false">Full Super</button>
+        </div>
+      </div>
+      <div class="field full" id="fsBox" hidden>
+        <label class="chk"><input type="checkbox" id="fsSel"> Produto da lista "Produtos selecionados" do ML (envio mais barato, só com anúncio de catálogo)</label>
+        <div class="field"><label for="fsin">Levar até o Full (frete + etiquetagem)</label><div class="inp"><span>R$</span><input id="fsin" inputmode="decimal" value="0,00"><span>/un</span></div></div>
+        <span class="hint">Full Super: preço mínimo R$ 8, só categorias de supermercado, reputação verde. Pequenos e médios não pagam armazenagem; estoque parado cobra a partir de 2 meses. Se o operador logístico não cuidar deste produto, zere o % dele em Custos.</span>
       </div>
       <div class="field"><label for="mlcom" id="mlcomL">Comissão da categoria</label><div class="inp"><input id="mlcom" inputmode="decimal" value="14"><span>%</span></div></div>
       <div class="field"><label for="mlpeso">Peso do pacote</label><div class="inp"><select id="mlpeso">
@@ -425,6 +441,8 @@ details.custos[open] summary::after{content:"Fechar"}
 const $=id=>document.getElementById(id);
 const NOMES={shopee:"Shopee",ml:"Mercado Livre",amz:"Amazon",custom:"Outro canal"};
 // Tabelas oficiais conferidas em 01/10/2026 — tudo editável no painel "Tabelas de taxas"
+const FS_PADRAO={"fonte": "mercadolivre.com.br/ajuda/49972", "limites": [19, 29, 49, 79, 99, 199], "pesos": [0.3, 0.5, 1, 1.5, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 20, 25, 30, 40, 50, 60, 70, 80, 90, 100, 125, 150, null], "selecionados": [[1.0, 1.2, 1.6, 2.4, 3.2, 4.8, 21.65], [1.0, 1.2, 1.6, 2.4, 3.2, 4.8, 23.25], [1.0, 1.2, 1.6, 2.4, 3.2, 4.8, 24.45], [1.4, 1.6, 2.0, 2.8, 3.6, 5.2, 25.45], [1.4, 1.6, 2.0, 2.8, 3.6, 5.2, 25.55], [1.8, 2.25, 2.7, 3.6, 4.5, 6.3, 27.05], [1.8, 2.25, 2.7, 3.6, 4.5, 6.3, 29.25], [2.75, 3.85, 4.4, 5.5, 6.6, 8.25, 32.45], [2.75, 3.85, 4.4, 5.5, 6.6, 8.25, 40.85], [4.4, 5.5, 6.05, 7.15, 7.7, 8.25, 45.25], [4.4, 5.5, 6.05, 7.15, 7.7, 8.25, 49.35], [5.0, 7.5, 9.1, 9.8, 10.5, 11.2, 50.75], [5.0, 7.5, 9.1, 9.8, 10.5, 11.2, 65.85], [5.0, 7.5, 9.1, 9.8, 10.5, 11.2, 69.35], [5.0, 7.5, 9.1, 9.8, 10.5, 11.2, 70.95], [5.0, 7.5, 9.1, 9.8, 10.5, 11.2, 75.65], [5.0, 7.5, 10.35, 11.75, 15.0, 16.0, 79.35], [5.0, 7.5, 10.55, 11.95, 15.0, 16.0, 91.95], [5.0, 7.5, 10.95, 12.15, 15.0, 16.0, 106.85], [5.0, 7.5, 11.15, 12.35, 15.0, 16.0, 107.85], [5.0, 7.5, 11.35, 12.55, 15.0, 16.0, 107.95], [5.0, 7.5, 11.55, 12.75, 18.75, 20.0, 111.65], [5.0, 7.5, 11.75, 12.95, 18.75, 20.0, 119.05], [5.0, 7.5, 11.95, 13.15, 18.75, 20.0, 127.45], [5.0, 7.5, 12.15, 13.35, 18.75, 20.0, 133.15], [5.0, 7.5, 12.35, 13.55, 18.75, 20.0, 147.85], [5.0, 7.5, 12.55, 13.75, 18.75, 20.0, 168.85], [5.0, 7.5, 12.75, 13.95, 18.75, 20.0, 188.85], [5.0, 7.5, 12.75, 14.15, 18.75, 20.0, 200.35], [5.0, 7.5, 12.75, 14.35, 18.75, 20.0, 262.85]], "demais": [[1.4, 1.8, 2.4, 3.6, 4.8, 7.2, 21.65], [1.4, 1.8, 2.4, 3.6, 4.8, 7.2, 23.25], [1.4, 1.8, 2.4, 3.6, 4.8, 7.2, 24.45], [1.95, 2.4, 3.0, 4.2, 5.4, 7.8, 25.45], [1.95, 2.4, 3.0, 4.2, 5.4, 7.8, 25.55], [2.2, 3.0, 3.6, 4.8, 6.0, 8.4, 27.05], [2.2, 3.0, 3.6, 4.8, 6.0, 8.4, 29.25], [3.0, 4.38, 5.0, 6.25, 7.5, 9.38, 32.45], [3.0, 4.38, 5.0, 6.25, 7.5, 9.38, 40.85], [4.8, 6.25, 6.88, 8.13, 8.75, 9.38, 45.25], [4.8, 6.25, 6.88, 8.13, 8.75, 9.38, 49.35], [5.0, 7.5, 9.1, 9.8, 10.5, 11.2, 50.75], [5.0, 7.5, 9.1, 9.8, 10.5, 11.2, 65.85], [5.0, 7.5, 9.1, 9.8, 10.5, 11.2, 69.35], [5.0, 7.5, 9.1, 9.8, 10.5, 11.2, 70.95], [5.0, 7.5, 9.1, 9.8, 10.5, 11.2, 75.65], [5.0, 7.5, 10.35, 11.75, 15.0, 16.0, 79.35], [5.0, 7.5, 10.55, 11.95, 15.0, 16.0, 91.95], [5.0, 7.5, 10.95, 12.15, 15.0, 16.0, 106.85], [5.0, 7.5, 11.15, 12.35, 15.0, 16.0, 107.85], [5.0, 7.5, 11.35, 12.55, 15.0, 16.0, 107.95], [5.0, 7.5, 11.55, 12.75, 18.75, 20.0, 111.65], [5.0, 7.5, 11.75, 12.95, 18.75, 20.0, 119.05], [5.0, 7.5, 11.95, 13.15, 18.75, 20.0, 127.45], [5.0, 7.5, 12.15, 13.35, 18.75, 20.0, 133.15], [5.0, 7.5, 12.35, 13.55, 18.75, 20.0, 147.85], [5.0, 7.5, 12.55, 13.75, 18.75, 20.0, 168.85], [5.0, 7.5, 12.75, 13.95, 18.75, 20.0, 188.85], [5.0, 7.5, 12.75, 14.15, 18.75, 20.0, 200.35], [5.0, 7.5, 12.75, 14.35, 18.75, 20.0, 262.85]], "tetoAte": 29, "tetoPct": 0.25, "minPreco": 8};
+const FS=()=>(TX.ml&&TX.ml.fullsuper)||FS_PADRAO;
 const PADRAO={
   data:"01/10/2026",
   shopee:{faixas:[{ate:80,pct:20,fixo:4.5},{ate:100,pct:14,fixo:16},{ate:200,pct:14,fixo:20},{ate:null,pct:14,fixo:26}],minPreco:9,minFracao:.5},
@@ -451,7 +469,7 @@ function salvarTX(){try{localStorage.setItem("cb-taxas",JSON.stringify(TX))}catc
   }catch(e){}
 })();
 try{const m=JSON.parse(localStorage.getItem("cb-meta"));if(m)META=m}catch(e){}
-let canal="shopee", mltipo="classico", modo="pagar";
+let canal="shopee", mltipo="classico", modo="pagar", mlenv="normal";
 
 const num=v=>{v=String(v||"").trim().replace(/\s/g,"");if(v.includes(","))v=v.replace(/\./g,"").replace(",",".");const n=parseFloat(v);return isFinite(n)?n:0};
 const brl=n=>(n<0?"−":"")+"R$ "+Math.abs(n).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -516,7 +534,7 @@ function aplicarPacote(){
     +(p.acima?" · <b>acima de 5 kg</b>: confira o envio no simulador do ML":"");
   return p;
 }
-function cfg(){return{
+function cfg(){return{mlenv:mlenv, fsSel:$("fsSel").checked, fsin:num($("fsin").value), kitUn:Math.max(num($("kit").value),1),
   mlcom:num($("mlcom").value)/100, mlpeso:+$("mlpeso").value, mlfrete100:num($("mlfrete100").value),
   amzcom:num($("amzcom").value)/100, amzfrete79:num($("amzfrete79").value),
   cuspct:num($("cuspct").value)/100, cusfix:num($("cusfix").value)}}
@@ -527,6 +545,15 @@ function taxas(c,P,k){
     const fs=TX.shopee.faixas, f=fs.find(x=>x.ate==null||P<x.ate)||fs[fs.length-1], p=f.pct/100;
     if(P<TX.shopee.minPreco) return{com:p*P,fixo:P*TX.shopee.minFracao,nota:fmtP(f.pct)+" + "+fmtP(TX.shopee.minFracao*100)+" do preço"};
     return{com:p*P,fixo:f.fixo,nota:fmtP(f.pct)+" + "+brl(f.fixo)};
+  }
+  if(c==="ml"&&k.mlenv==="full"){
+    const F=FS(),pc=pacote(),kg=pc?pc.cons:[0.3,0.5,1,1.5,2,3,4,5][k.mlpeso];
+    let w=F.pesos.findIndex(x=>x==null||kg<=x+1e-9);if(w<0)w=F.pesos.length-1;
+    let b=F.limites.findIndex(x=>P<x);if(b<0)b=F.limites.length;
+    let env=(k.fsSel?F.selecionados:F.demais)[w][b];
+    if(P<F.tetoAte)env=Math.min(env,F.tetoPct*P);
+    const ent=k.fsin*k.kitUn;
+    return{com:k.mlcom*P,fixo:env+ent,nota:fmtP(k.mlcom*100)+" + envio Full Super "+brl(env)+(ent>0?" + entrada no Full "+brl(ent):"")};
   }
   if(c==="ml"){
     const L=TX.ml.limites;let fixo,nota;
@@ -570,7 +597,7 @@ function custoMax(c,P,b,k,m){const x=calc(c,P,{...b,lote:0},k);return (x.lucro-m
 // limites de faixa do canal (o preço logo abaixo pode render mais)
 function limites(c){
   if(c==="shopee")return TX.shopee.faixas.filter(f=>f.ate!=null).map(f=>f.ate);
-  if(c==="ml")return TX.ml.limites.slice();
+  if(c==="ml")return mlenv==="full"?FS().limites.slice():TX.ml.limites.slice();
   if(c==="amz")return TX.amz.faixas.map(f=>f.ate);
   return[];
 }
@@ -674,6 +701,8 @@ function atualizarBusca(){
 }
 function render(){
   aplicarPacote();
+  document.querySelectorAll("#mlenv button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.e===mlenv));
+  $("fsBox").hidden=mlenv!=="full";
   const b=base(),k=cfg(),r=calc(canal,b.P,b,k),temCusto=b.lote>0;
   const pagar=modo==="pagar";
   document.querySelectorAll("#modo button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.m===modo));
@@ -683,7 +712,8 @@ function render(){
 
   atualizarBusca();
   $("taxaAgora").innerHTML=(canal==="custom"?"Taxa":"Taxa "+(canal==="ml"?"do ":"da ")+NOMES[canal])+" neste preço: <b>"+r.t.nota.replace(/ \+ envio pela tabela/," + envio "+brl(r.t.fixo)).replace(/ \+ envio DBA/," + envio DBA "+brl(r.t.fixo))+"</b> = <b>"+brl(r.t.com+r.t.fixo)+"</b> por venda";
-  $("mlfrete100F").hidden=!(b.P>TX.ml.limites[TX.ml.limites.length-1]);
+  if(canal==="ml"&&mlenv==="full"&&num($("preco").value)<FS().minPreco)$("taxaAgora").innerHTML+=" · <b>Full Super exige preço mínimo de R$ 8</b>";
+  $("mlfrete100F").hidden=mlenv==="full"||(!(b.P>TX.ml.limites[TX.ml.limites.length-1]));
   $("amzfrete79F").hidden=!(b.P>=TX.amz.faixas[TX.amz.faixas.length-1].ate);
   $("custosResumo").textContent="Imposto "+fmtP(b.imp*100)+" · Emb. "+brl(b.emb)+(b.ads>0?" · ADS "+fmtP(b.ads*100):"")+(b.op>0?" · Operador "+fmtP(b.op*100):"")+(b.afil>0?" · Afil. "+fmtP(b.afil*100):"")+(b.dev>0?" · Devol. "+fmtP(b.dev*100):"")+" · Margem alvo "+fmtP(b.alvo*100)+(b.part<1?" · LDF "+fmtP(b.part*100):"");
 
@@ -797,9 +827,9 @@ function render(){
 }
 
 // estado e histórico (só neste aparelho)
-const CAMPOS=["pkpeso","pkc","pkl","pka","nome","lote","loteqtd","kit","preco","imposto","emb","ads","op","alvo","afil","dev","part","mlcom","mlpeso","mlfrete100","amzcom","amzfrete79","cuspct","cusfix"];
-function salvarEstado(){try{const s={canal,mltipo,modo,mlCat};CAMPOS.forEach(f=>s[f]=$(f).value);localStorage.setItem("cb-estado",JSON.stringify(s))}catch(e){}}
-function aplicar(s){if(!s)return;if(s.modo)modo=s.modo;mlCat=s.mlCat||null;CAMPOS.forEach(f=>{if(s[f]!=null)$(f).value=s[f]});if(s.mltipo)setTipo(s.mltipo,false);if(s.canal)setCanal(s.canal,false)}
+const CAMPOS=["fsin","pkpeso","pkc","pkl","pka","nome","lote","loteqtd","kit","preco","imposto","emb","ads","op","alvo","afil","dev","part","mlcom","mlpeso","mlfrete100","amzcom","amzfrete79","cuspct","cusfix"];
+function salvarEstado(){try{const s={canal,mltipo,modo,mlCat,mlenv,fsSel:$("fsSel").checked};CAMPOS.forEach(f=>s[f]=$(f).value);localStorage.setItem("cb-estado",JSON.stringify(s))}catch(e){}}
+function aplicar(s){if(!s)return;if(s.modo)modo=s.modo;if(s.mlenv)mlenv=s.mlenv;$("fsSel").checked=!!s.fsSel;mlCat=s.mlCat||null;CAMPOS.forEach(f=>{if(s[f]!=null)$(f).value=s[f]});if(s.mltipo)setTipo(s.mltipo,false);if(s.canal)setCanal(s.canal,false)}
 function lerHist(){try{return JSON.parse(localStorage.getItem("cb-hist")||"[]")}catch(e){return[]}}
 function renderHist(){
   const h=lerHist();
@@ -808,7 +838,7 @@ function renderHist(){
 }
 $("hist").addEventListener("click",e=>{const bt=e.target.closest("button[data-i]");if(!bt)return;const x=lerHist()[+bt.dataset.i];if(x){aplicar(x.estado);render();toast("Simulação carregada");window.scrollTo({top:0,behavior:"smooth"})}});
 $("salvar").addEventListener("click",()=>{
-  const b=base(),r=calc(canal,b.P,b,cfg());const estado={canal,mltipo,modo,mlCat};CAMPOS.forEach(f=>estado[f]=$(f).value);
+  const b=base(),r=calc(canal,b.P,b,cfg());const estado={canal,mltipo,modo,mlCat,mlenv,fsSel:$("fsSel").checked};CAMPOS.forEach(f=>estado[f]=$(f).value);
   const h=lerHist();const cm=custoMax(canal,b.P,b,cfg(),b.alvo);h.unshift({estado,resumo:b.lote>0?brl(b.P)+" → "+pct(r.margem):"pagar até "+brl(cm)+"/un"});
   try{localStorage.setItem("cb-hist",JSON.stringify(h.slice(0,20)));toast("Salvo neste celular")}catch(e){toast("Não foi possível salvar aqui")}
   renderHist();
@@ -820,6 +850,8 @@ function setTipo(t,r=true){const prev=mltipo;mltipo=t;document.querySelectorAll(
   if(r&&prev!==t){if(tarifaCat())aplicarTarifaCat();else{const v=num($("mlcom").value);$("mlcom").value=String(t==="premium"?v+5:Math.max(v-5,0)).replace(".",",")}render()}}
 document.querySelectorAll("#canal button").forEach(b=>b.addEventListener("click",()=>setCanal(b.dataset.c)));
 document.querySelectorAll("#mltipo button").forEach(b=>b.addEventListener("click",()=>setTipo(b.dataset.t)));
+document.querySelectorAll("#mlenv button").forEach(b=>b.addEventListener("click",()=>{mlenv=b.dataset.e;render()}));
+$("fsSel").addEventListener("change",()=>render());
 document.querySelectorAll("#modo button").forEach(b=>b.addEventListener("click",()=>{modo=b.dataset.m;render()}));
 let tR;const agendar=()=>{clearTimeout(tR);tR=setTimeout(render,90)};
 document.querySelectorAll("input,select").forEach(el=>{if(el.closest("#tabelas"))return;
